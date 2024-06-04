@@ -41,11 +41,12 @@ class AppsDisplay(QWidget):
 
         with open(self.csv_source) as f:
             reader = csv.reader(f)
-            first_line = next(reader)
             total_usage = 0
             usages = []
 
             for row, line in enumerate(reader):
+                if row == 0:
+                    continue
                 app_name = line[APP_NAME_IDX]
                 if app_name == 'None':
                     app_name = line[APP_EXE_IDX]
