@@ -51,8 +51,8 @@ class MainWindow(QMainWindow):
         self.label.setText(f'Current App: {name}')
 
     def update(self):
-        self.apps.update_display()
-        self.chart.update()
+        self.apps.update_display(self.date.date.date(), self.date.time_period.currentText())
+        self.chart.update(self.date.date.date(), self.date.time_period.currentText())
     
     def closeEvent(self, event: QCloseEvent) -> None:
         self.hide()

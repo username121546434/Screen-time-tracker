@@ -1,14 +1,15 @@
 import csv
-from constants import APP_EXE_IDX, APP_NAME_IDX, FILE
+from constants import APP_EXE_IDX, APP_NAME_IDX, FILE, TimePeriod
 from PySide6.QtGui import QPainter
 from PySide6.QtCharts import QChart, QChartView, QPieSeries, QPieSlice
+from PySide6.QtCore import QDate
 
 
 class ScreenTimeChart(QPieSeries):
     def __init__(self, parent):
         super().__init__(parent)
         self.csv_source = FILE
-        self.update()
+        self.update(QDate(), 'All Time')
 
         self._chart = QChart()
         self._chart.addSeries(self)
@@ -20,16 +21,15 @@ class ScreenTimeChart(QPieSeries):
         self.chart_view = QChartView(self._chart)
         self.chart_view.setRenderHint(QPainter.Antialiasing)
     
-    def update(self):
+    def update(self, date: QDate, time_period: TimePeriod):
         self.clear()
         lst = []
         total = 0
         with open(self.csv_source) as f:
             reader = csv.reader(f)
+            first_line = next(reader)
 
             for row, line in enumerate(reader):
-                if row == 0:
-                    continue
                 app_name = line[APP_NAME_IDX]
                 if app_name == 'None':
                     app_name = line[APP_EXE_IDX]
