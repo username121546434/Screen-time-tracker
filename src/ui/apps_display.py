@@ -21,6 +21,7 @@ class AppsDisplay(QWidget):
         layout = QHBoxLayout(self)
 
         self.table = table = QTableWidget(self)
+        table.setSortingEnabled(True)
         layout.addWidget(self.table)
 
         with open(csv_file) as f:
@@ -37,6 +38,10 @@ class AppsDisplay(QWidget):
         self.setLayout(layout)
     
     def update_display(self, date: QDate, time: TimePeriod):
+        self.table.setSortingEnabled(False)
+        # sorting breaks the table sometimes
+        # when setting items in a loop
+
         with open(self.csv_source) as f:
             lines = len(f.readlines())
 
@@ -101,3 +106,5 @@ class AppsDisplay(QWidget):
         
         for row, usage in enumerate(usages):
             self.table.setItem(row, 1, QTableWidgetItem(f'{(usage/total_usage):.2%}'))
+
+        self.table.setSortingEnabled(True)
