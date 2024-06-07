@@ -65,6 +65,30 @@ class AppsDisplay(QWidget):
                     day = datetime(day.year, day.month, day.day)
                     idx = first_line[day]
                     usage = int(line[idx])
+                elif time == 'Month':
+                    month = date.month()
+                    year = datetime.now().year
+                    usage = 0
+                    for day in range(1, 32):
+                        try:
+                            day = datetime(year, month, day)
+                            idx = first_line[day]
+                        except (KeyError, ValueError):
+                            pass
+                        else:
+                            usage += int(line[idx])
+                elif time == 'Year':
+                    year = date.year()
+                    usage = 0
+                    for month in range(1, 13):
+                        for day in range(1, 32):
+                            try:
+                                day = datetime(year, month, day)
+                                idx = first_line[day]
+                            except (KeyError, ValueError):
+                                pass
+                            else:
+                                usage += int(line[idx])
 
                 app_item = QTableWidgetItem(app_name)
                 usage_item = QTableWidgetItem(format_seconds(usage))
