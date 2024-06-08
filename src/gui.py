@@ -27,6 +27,9 @@ class MainWindow(QMainWindow):
         self.date = DateInput()
         layout.addWidget(self.date)
 
+        self.date.date.dateChanged.connect(self.update)
+        self.date.time_period.currentTextChanged.connect(self.update)
+
         self.chart = ScreenTimeChart(self)
         layout.addWidget(self.chart.chart_view)
 
@@ -51,8 +54,12 @@ class MainWindow(QMainWindow):
         self.label.setText(f'Current App: {name}')
 
     def update(self):
-        self.apps.update_display(self.date.date.date(), self.date.time_period.currentText())
-        self.chart.update(self.date.date.date(), self.date.time_period.currentText())
+        try:
+            self.apps.update_display(self.date.date.date(), self.date.time_period.currentText())
+            self.chart.update(self.date.date.date(), self.date.time_period.currentText())
+        except KeyError:
+            self.statusBar().showMessage(f'No data for {self.date.date.date().toPython()}', 2000)
+            raise
     
     def closeEvent(self, event: QCloseEvent) -> None:
         self.hide()

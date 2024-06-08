@@ -50,10 +50,10 @@ class ItemDelegate(QItemDelegate):
         item = self.table.itemFromIndex(index)
         # This ensures the table is always displaying
         # the int/float value stored in the custom data role.
-        if item.text() != str(item.data(USAGE_ROLE)) and item.data(USAGE_ROLE) is not None:
+        if item and item.text() != str(item.data(USAGE_ROLE)) and item.data(USAGE_ROLE) is not None:
             item.setText(format_seconds(item.data(USAGE_ROLE)))
             item.setTextAlignment(Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignCenter)
-        elif item.data(PERCENT_ROLE) is not None:
+        elif item and item.data(PERCENT_ROLE) is not None:
             item.setText(f'{item.data(PERCENT_ROLE):.2%}')
             item.setTextAlignment(Qt.AlignmentFlag.AlignCenter)
         super(ItemDelegate, self).paint(painter, option, index)
