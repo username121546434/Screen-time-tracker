@@ -16,7 +16,7 @@ def format_seconds(seconds: int):
     hours = seconds // 3600
     minutes = (seconds % 3600) // 60
     seconds = seconds % 60
-    return f"{hours}h {minutes}m {seconds}s"
+    return f"{hours:>3}h {minutes:>3}m {seconds:>3}s"
 
 
 def unformat_seconds(time_string: str):
@@ -65,7 +65,6 @@ class UsageItem(QTableWidgetItem):
         super().__init__(*args, **kw)
     
     def __lt__(self, other):
-        print(other)
         if isinstance(other, UsageItem):
             return self.usage < other.usage
         raise ValueError
