@@ -55,8 +55,10 @@ class ScreenTimeChart(QPieSeries):
                         try:
                             day = datetime(year, month, day)
                             idx = first_line[day]
-                        except (KeyError, ValueError):
+                        except KeyError:
                             pass
+                        except ValueError:
+                            break
                         else:
                             usage += int(line[idx])
                 elif time == 'Year':
