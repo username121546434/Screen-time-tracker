@@ -1,7 +1,7 @@
 import datetime
 from datetime import datetime
 from pathlib import Path
-from PySide6.QtWidgets import QWidget, QHBoxLayout, QTableWidget, QTableWidgetItem, QItemDelegate
+from PySide6.QtWidgets import QWidget, QHBoxLayout, QTableWidget, QTableWidgetItem, QItemDelegate, QHeaderView
 from PySide6.QtCore import QDate, Qt
 import csv
 from constants import APP_NAME_IDX, APP_EXE_IDX, DATE_FMT, TimePeriod
@@ -91,9 +91,8 @@ class AppsDisplay(QWidget):
 
         table.setColumnCount(3)
         table.setRowCount(lines)
-        table.setColumnWidth(0, 150)
-        table.setColumnWidth(1, 49)
-        table.setColumnWidth(2, 48)
+        table.horizontalHeader().setMinimumWidth(150)
+        table.horizontalHeader().setSectionResizeMode(1, QHeaderView.ResizeMode.ResizeToContents)
         table.setHorizontalHeaderLabels(['Name', 'Percent', 'Usage'])
 
         self.update_display(QDate(), 'All Time')
