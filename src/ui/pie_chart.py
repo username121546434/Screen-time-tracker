@@ -10,17 +10,17 @@ class ScreenTimeChart(QPieSeries):
     def __init__(self, parent):
         super().__init__(parent)
         self.csv_source = FILE
-        self.update(QDate(), 'All Time')
 
         self._chart = QChart()
         self._chart.addSeries(self)
         self._chart.legend().hide()
-        self._chart.setMinimumSize(400, 200)
+        self._chart.setMinimumSize(500, 400)
 
         self.hovered.connect(self.hovered_over)
 
         self.chart_view = QChartView(self._chart)
         self.chart_view.setRenderHint(QPainter.Antialiasing)
+        self.update(QDate(), 'All Time')
     
     def update(self, date: QDate, time: TimePeriod):
         self.clear()
@@ -42,11 +42,13 @@ class ScreenTimeChart(QPieSeries):
                 
                 if time == 'All Time':
                     usage = sum(map(int, line[APP_EXE_IDX + 1:]))
+                    self._chart.setTitle('All Time Screen Time')
                 elif time == 'Day':
                     day = date.toPython() # this returns a datetime.date object
                     day = datetime(day.year, day.month, day.day)
                     idx = first_line[day]
                     usage = int(line[idx])
+                    self._chart.setTitle(f'Screen time for {day:{DATE_FMT}}')
                 elif time == 'Month':
                     month = date.month()
                     year = date.year()
@@ -61,6 +63,7 @@ class ScreenTimeChart(QPieSeries):
                             break
                         else:
                             usage += int(line[idx])
+                    self._chart.setTitle(f'Screen time for {datetime(year, month, day-1):%B %Y}')
                 elif time == 'Year':
                     year = date.year()
                     usage = 0
@@ -73,6 +76,7 @@ class ScreenTimeChart(QPieSeries):
                                 pass
                             else:
                                 usage += int(line[idx])
+                    self._chart.setTitle(f'Screen time for {year}')
 
                 total += usage
 
