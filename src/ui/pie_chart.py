@@ -49,7 +49,7 @@ class ScreenTimeChart(QPieSeries):
                     usage = int(line[idx])
                 elif time == 'Month':
                     month = date.month()
-                    year = datetime.now().year
+                    year = date.year()
                     usage = 0
                     for day in range(1, 32):
                         try:
