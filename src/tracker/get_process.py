@@ -67,7 +67,7 @@ def get_app_name_from_exe(windows_exe: str) -> str | None:
     """Returns the application name of a windows executable path
 
     Args:
-        windows_exe (str): The path to the executable, ie: ``C:\...\Programs\Microsoft VS Code\Code.exe``
+        windows_exe (str): The path to the executable, ie: ``C:\\...\\Programs\\Microsoft VS Code\\Code.exe``
 
     Returns:
         `str | None`: The app name. ie: Visual Studio Code
