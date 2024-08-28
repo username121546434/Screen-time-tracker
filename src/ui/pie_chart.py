@@ -5,6 +5,7 @@ from PySide6.QtGui import QPainter
 from PySide6.QtCharts import QChart, QChartView, QPieSeries, QPieSlice
 from PySide6.QtCore import QDate
 from get_data import get_data
+from get_title import get_title
 
 
 class ScreenTimeChart(QPieSeries):
@@ -26,16 +27,7 @@ class ScreenTimeChart(QPieSeries):
     def update(self, date: QDate, time: TimePeriod):
         self.clear()
 
-        if time == 'All Time':
-            self._chart.setTitle('All Time Screen Time')
-        elif time == 'Day':
-            day = date.toPython() # this returns a datetime.date object
-            day = datetime(day.year, day.month, day.day)
-            self._chart.setTitle(f'Screen time for {day:{DATE_FMT}}')
-        elif time == 'Month':
-            self._chart.setTitle(f'Screen time for {datetime(date.year(), date.month(), date.day()-1):%B %Y}')
-        elif time == 'Year':
-            self._chart.setTitle(f'Screen time for {date.year()}')
+        self._chart.setTitle(get_title(time, date))
 
         lst, total = get_data(self.csv_source, date, time)
 
