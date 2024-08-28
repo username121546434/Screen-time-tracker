@@ -1,11 +1,13 @@
 import csv
 from datetime import datetime
 from constants import APP_EXE_IDX, APP_NAME_IDX, DATE_FMT, FILE, TimePeriod
-from PySide6.QtGui import QPainter
+from PySide6.QtGui import QPainter, QColor
 from PySide6.QtCharts import QChart, QChartView, QHorizontalBarSeries, QBarSet, QBarCategoryAxis, QValueAxis
 from PySide6.QtCore import QDate, Qt
 from .get_data import get_data
 from .get_title import get_title
+
+DEFAULT_COLOR = QColor.fromHsvF(0.555833, 0.000000, 1.000000, 1.000000)
 
 
 class ScreenTimeBarGraph(QHorizontalBarSeries):
@@ -17,7 +19,7 @@ class ScreenTimeBarGraph(QHorizontalBarSeries):
         self._chart.addSeries(self)
         self._chart.setMinimumSize(400, 400)
 
-        # self.hovered.connect(self.hovered_over)
+        self.hovered.connect(self.hovered_over)
 
         self.x_axis = axis_x = QBarCategoryAxis()
         self._chart.addAxis(axis_x, Qt.AlignmentFlag.AlignLeft)
@@ -25,11 +27,22 @@ class ScreenTimeBarGraph(QHorizontalBarSeries):
 
         self.y_axis = axis_y = QValueAxis()
         self.update(QDate(), 'All Time')
+        axis_y.setTickCount(7)
         self._chart.addAxis(axis_y, Qt.AlignmentFlag.AlignBottom)
         self.attachAxis(axis_y)
 
         self.chart_view = QChartView(self._chart)
         self.chart_view.setRenderHint(QPainter.Antialiasing)
+    
+    def hovered_over(self, bool_val: bool, int_val: int, q_set: QBarSet):
+        print(bool_val, int_val, q_set, q_set.label(), q_set)
+
+        if bool_val:
+            print(q_set.borderColor(), q_set.labelColor(), q_set.labelFont())
+            q_set.setBorderColor('red')
+            q_set.setLabelColor('red')
+        else:
+            q_set.setBorderColor(DEFAULT_COLOR)
     
     def update(self, date: QDate, time_period: TimePeriod):
         self.clear()
