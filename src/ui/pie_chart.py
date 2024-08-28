@@ -4,8 +4,8 @@ from constants import APP_EXE_IDX, APP_NAME_IDX, DATE_FMT, FILE, TimePeriod
 from PySide6.QtGui import QPainter
 from PySide6.QtCharts import QChart, QChartView, QPieSeries, QPieSlice
 from PySide6.QtCore import QDate
-from get_data import get_data
-from get_title import get_title
+from .get_data import get_data
+from .get_title import get_title
 
 
 class ScreenTimeChart(QPieSeries):

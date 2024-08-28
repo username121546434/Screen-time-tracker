@@ -4,7 +4,7 @@ from datetime import datetime
 from PySide6.QtCore import QDate
 
 
-def get_data(csv_file: str, date: QDate, time_period: TimePeriod):
+def get_data(csv_file: str, date: QDate, time_period: TimePeriod, include_other: bool = False):
     lst: list[tuple[str, int]] = []
     total = 0
     with open(csv_file) as f:
@@ -60,4 +60,16 @@ def get_data(csv_file: str, date: QDate, time_period: TimePeriod):
             lst.append((app_name, usage))
 
     lst.sort(key=lambda a: a[1], reverse=True)
+
+    if include_other:
+        new_lst: list[tuple[str, int]] = []
+        other_usage = 0
+        for app, usage in lst:
+            if usage / total < 0.01:
+                other_usage += usage
+            else:
+                new_lst.append((app, usage))
+        new_lst.append(("Other", other_usage))
+        lst = new_lst
+
     return lst, total
