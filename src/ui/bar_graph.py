@@ -15,40 +15,39 @@ class ScreenTimeBarGraph(QHorizontalBarSeries):
 
         self._chart = QChart()
         self._chart.addSeries(self)
-        self._chart.setMinimumSize(400, 300)
+        self._chart.setMinimumSize(400, 400)
 
         # self.hovered.connect(self.hovered_over)
 
+        self.x_axis = axis_x = QBarCategoryAxis()
+        self._chart.addAxis(axis_x, Qt.AlignmentFlag.AlignLeft)
+        self.attachAxis(axis_x)
+
+        self.y_axis = axis_y = QValueAxis()
+        self.update(QDate(), 'All Time')
+        self._chart.addAxis(axis_y, Qt.AlignmentFlag.AlignBottom)
+        self.attachAxis(axis_y)
+
         self.chart_view = QChartView(self._chart)
         self.chart_view.setRenderHint(QPainter.Antialiasing)
-        self.update(QDate(), 'All Time')
     
     def update(self, date: QDate, time_period: TimePeriod):
         self.clear()
-        for ax in self.attachedAxes():
-            self.detachAxis(ax)
 
         self._chart.setTitle(get_title(time_period, date))
 
         lst, total = get_data(self.csv_source, date, time_period, include_other=True)
+        lst = lst[::-1]
 
         usages: list[int] = []
 
-        for app, usage in lst[::-1]:
+        for app, usage in lst:
             usage = usage / 3600    # 3600 is the number of seconds in an hour
             usages.append(usage)
 
             set_ = QBarSet(app)
             set_.append(usage)
             self.append(set_)
-        
-        axis_x = QBarCategoryAxis()
-        self._chart.addAxis(axis_x, Qt.AlignmentFlag.AlignLeft)
-        self.attachAxis(axis_x)
 
-        axis_y = QValueAxis()
-        axis_y.setRange(0, max(usages))
-        self._chart.addAxis(axis_y, Qt.AlignmentFlag.AlignBottom)
-        self.attachAxis(axis_y)
 
-        self.attachedAxes()
+        self.y_axis.setRange(0, max(usages))
