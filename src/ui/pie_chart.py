@@ -4,6 +4,7 @@ from constants import APP_EXE_IDX, APP_NAME_IDX, DATE_FMT, FILE, TimePeriod
 from PySide6.QtGui import QPainter
 from PySide6.QtCharts import QChart, QChartView, QPieSeries, QPieSlice
 from PySide6.QtCore import QDate
+from get_data import get_data
 
 
 class ScreenTimeChart(QPieSeries):
@@ -24,65 +25,20 @@ class ScreenTimeChart(QPieSeries):
     
     def update(self, date: QDate, time: TimePeriod):
         self.clear()
-        lst = []
-        total = 0
-        with open(self.csv_source) as f:
-            reader = csv.reader(f)
-            first_line = {}
-            for idx, i in enumerate(next(reader)):
-                try:
-                    first_line[datetime.strptime(i, DATE_FMT)] = idx
-                except ValueError:
-                    pass
 
-            for row, line in enumerate(reader):
-                app_name = line[APP_NAME_IDX]
-                if app_name == 'None':
-                    app_name = line[APP_EXE_IDX]
-                
-                if time == 'All Time':
-                    usage = sum(map(int, line[APP_EXE_IDX + 1:]))
-                    self._chart.setTitle('All Time Screen Time')
-                elif time == 'Day':
-                    day = date.toPython() # this returns a datetime.date object
-                    day = datetime(day.year, day.month, day.day)
-                    idx = first_line[day]
-                    usage = int(line[idx])
-                    self._chart.setTitle(f'Screen time for {day:{DATE_FMT}}')
-                elif time == 'Month':
-                    month = date.month()
-                    year = date.year()
-                    usage = 0
-                    for day in range(1, 32):
-                        try:
-                            day = datetime(year, month, day)
-                            idx = first_line[day]
-                        except KeyError:
-                            pass
-                        except ValueError:
-                            break
-                        else:
-                            usage += int(line[idx])
-                    self._chart.setTitle(f'Screen time for {datetime(year, month, day-1):%B %Y}')
-                elif time == 'Year':
-                    year = date.year()
-                    usage = 0
-                    for month in range(1, 13):
-                        for day in range(1, 32):
-                            try:
-                                day = datetime(year, month, day)
-                                idx = first_line[day]
-                            except (KeyError, ValueError):
-                                pass
-                            else:
-                                usage += int(line[idx])
-                    self._chart.setTitle(f'Screen time for {year}')
+        if time == 'All Time':
+            self._chart.setTitle('All Time Screen Time')
+        elif time == 'Day':
+            day = date.toPython() # this returns a datetime.date object
+            day = datetime(day.year, day.month, day.day)
+            self._chart.setTitle(f'Screen time for {day:{DATE_FMT}}')
+        elif time == 'Month':
+            self._chart.setTitle(f'Screen time for {datetime(date.year(), date.month(), date.day()-1):%B %Y}')
+        elif time == 'Year':
+            self._chart.setTitle(f'Screen time for {date.year()}')
 
-                total += usage
+        lst, total = get_data(self.csv_source, date, time)
 
-                lst.append((app_name, usage))
-
-        lst.sort(key=lambda a: a[1], reverse=True)
         for i in lst:
             self.append(f'{i[0]} {(i[1] / total):.1%}', i[1])
     
