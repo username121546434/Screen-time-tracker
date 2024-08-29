@@ -1,11 +1,10 @@
-import csv
-from datetime import datetime
-from constants import APP_EXE_IDX, APP_NAME_IDX, DATE_FMT, FILE, TimePeriod
+from constants import FILE, TimePeriod
 from PySide6.QtGui import QPainter, QColor
 from PySide6.QtCharts import QChart, QChartView, QHorizontalBarSeries, QBarSet, QBarCategoryAxis, QValueAxis
 from PySide6.QtCore import QDate, Qt
 from .get_data import get_data
 from .get_title import get_title
+from .apps_display import format_seconds
 
 DEFAULT_COLOR = QColor.fromHsvF(0.555833, 0.000000, 1.000000, 1.000000)
 
@@ -18,6 +17,9 @@ class ScreenTimeBarGraph(QHorizontalBarSeries):
         self._chart = QChart()
         self._chart.addSeries(self)
         self._chart.setMinimumSize(400, 400)
+        self.setLabelsVisible(True)
+        self.setLabelsFormat('@value hours')
+        self.setLabelsPrecision(2)
 
         self.hovered.connect(self.hovered_over)
 
@@ -28,6 +30,7 @@ class ScreenTimeBarGraph(QHorizontalBarSeries):
         self.y_axis = axis_y = QValueAxis()
         self.update(QDate(), 'All Time')
         axis_y.setTickCount(7)
+        axis_y.setLabelFormat(r"%dh")
         self._chart.addAxis(axis_y, Qt.AlignmentFlag.AlignBottom)
         self.attachAxis(axis_y)
 
@@ -38,9 +41,7 @@ class ScreenTimeBarGraph(QHorizontalBarSeries):
         print(bool_val, int_val, q_set, q_set.label(), q_set)
 
         if bool_val:
-            print(q_set.borderColor(), q_set.labelColor(), q_set.labelFont())
             q_set.setBorderColor('red')
-            q_set.setLabelColor('red')
         else:
             q_set.setBorderColor(DEFAULT_COLOR)
     
@@ -60,6 +61,7 @@ class ScreenTimeBarGraph(QHorizontalBarSeries):
 
             set_ = QBarSet(app)
             set_.append(usage)
+            set_.setLabel(f'{app} {format_seconds(int(usage * 3600))}')
             self.append(set_)
 
 
