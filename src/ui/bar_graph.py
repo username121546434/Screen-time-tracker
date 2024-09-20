@@ -1,4 +1,5 @@
-from constants import FILE, TimePeriod
+from constants import TimePeriod
+import sqlite3
 from PySide6.QtGui import QPainter, QColor
 from PySide6.QtCharts import QChart, QChartView, QHorizontalBarSeries, QBarSet, QBarCategoryAxis, QValueAxis
 from PySide6.QtCore import QDate, Qt
@@ -10,9 +11,8 @@ DEFAULT_COLOR = QColor.fromHsvF(0.555833, 0.000000, 1.000000, 1.000000)
 
 
 class ScreenTimeBarGraph(QHorizontalBarSeries):
-    def __init__(self, parent):
+    def __init__(self, parent, cursor: sqlite3.Cursor):
         super().__init__(parent)
-        self.csv_source = FILE
 
         self._chart = QChart()
         self._chart.addSeries(self)
@@ -28,7 +28,7 @@ class ScreenTimeBarGraph(QHorizontalBarSeries):
         self.attachAxis(axis_x)
 
         self.y_axis = axis_y = QValueAxis()
-        self.update(QDate(), 'All Time')
+        self.update(QDate(), 'All Time', cursor)
         axis_y.setTickCount(7)
         axis_y.setLabelFormat(r"%dh")
         self._chart.addAxis(axis_y, Qt.AlignmentFlag.AlignBottom)
@@ -45,12 +45,12 @@ class ScreenTimeBarGraph(QHorizontalBarSeries):
         else:
             q_set.setBorderColor(DEFAULT_COLOR)
     
-    def update(self, date: QDate, time_period: TimePeriod):
+    def update(self, date: QDate, time_period: TimePeriod, cursor: sqlite3.Cursor):
         self.clear()
 
         self._chart.setTitle(get_title(time_period, date))
 
-        lst, total = get_data(self.csv_source, date, time_period, include_other=True)
+        lst, total = get_data(cursor, date, time_period, include_other=True)
         lst = lst[::-1]
 
         usages: list[int] = []
