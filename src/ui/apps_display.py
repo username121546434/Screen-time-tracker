@@ -1,10 +1,11 @@
 import datetime
 from datetime import datetime
-from pathlib import Path
+import sqlite3
 from PySide6.QtWidgets import QWidget, QHBoxLayout, QTableWidget, QTableWidgetItem, QItemDelegate, QHeaderView
 from PySide6.QtCore import QDate, Qt
 import csv
-from constants import APP_NAME_IDX, APP_EXE_IDX, DATE_FMT, TimePeriod
+from constants import DATE_FMT, TimePeriod
+from .get_data import get_data
 import re
 
 SECONDS_TYPE = QTableWidgetItem.ItemType.UserType
@@ -71,9 +72,8 @@ class UsageItem(QTableWidgetItem):
 
 
 class AppsDisplay(QWidget):
-    def __init__(self, csv_file: Path | str, parent: QWidget | None = None) -> None:
+    def __init__(self, cursor: sqlite3.Cursor, parent: QWidget | None = None) -> None:
         super().__init__(parent)
-        self.csv_source = csv_file
         layout = QHBoxLayout(self)
 
         self.table = table = QTableWidget(self)
@@ -86,90 +86,36 @@ class AppsDisplay(QWidget):
 
         layout.addWidget(self.table)
 
-        with open(csv_file) as f:
-            lines = len(f.readlines())
-
         table.setColumnCount(3)
-        table.setRowCount(lines)
         table.horizontalHeader().setMinimumWidth(150)
         table.horizontalHeader().setSectionResizeMode(1, QHeaderView.ResizeMode.ResizeToContents)
         table.setHorizontalHeaderLabels(['Name', 'Percent', 'Usage'])
 
-        self.update_display(QDate(), 'All Time')
+        self.update_display(QDate(), 'All Time', cursor)
         self.setLayout(layout)
     
-    def update_display(self, date: QDate, time: TimePeriod):
+    def update_display(self, date: QDate, time: TimePeriod, cursor: sqlite3.Cursor):
         self.table.setSortingEnabled(False)
         # sorting breaks the table sometimes
         # when setting items in a loop
 
-        with open(self.csv_source) as f:
-            lines = len(f.readlines())
 
-        self.table.setRowCount(lines)
-
-        with open(self.csv_source) as f:
-            reader = csv.reader(f)
-            total_usage = 0
-            usages = []
-            first_line = {}
-            for idx, i in enumerate(next(reader)):
-                try:
-                    first_line[datetime.strptime(i, DATE_FMT)] = idx
-                except ValueError:
-                    pass
-
-            for row, line in enumerate(reader):
-                app_name = line[APP_NAME_IDX]
-                if app_name == 'None':
-                    app_name = line[APP_EXE_IDX]
-
-                if time == 'All Time':
-                    usage = sum(map(int, line[APP_EXE_IDX + 1:]))
-                elif time == 'Day':
-                    day = date.toPython() # this returns a datetime.date object
-                    day = datetime(day.year, day.month, day.day)
-                    idx = first_line[day]
-                    usage = int(line[idx])
-                elif time == 'Month':
-                    month = date.month()
-                    year = datetime.now().year
-                    usage = 0
-                    for day in range(1, 32):
-                        try:
-                            day = datetime(year, month, day)
-                            idx = first_line[day]
-                        except (KeyError, ValueError):
-                            pass
-                        else:
-                            usage += int(line[idx])
-                elif time == 'Year':
-                    year = date.year()
-                    usage = 0
-                    for month in range(1, 13):
-                        for day in range(1, 32):
-                            try:
-                                day = datetime(year, month, day)
-                                idx = first_line[day]
-                            except (KeyError, ValueError):
-                                pass
-                            else:
-                                usage += int(line[idx])
-
-                app_item = QTableWidgetItem(app_name)
-                usage_item = UsageItem(usage, SECONDS_TYPE)
-
-                usage_item.setData(USAGE_ROLE, usage)
-
-                self.table.setItem(row, 0, app_item)
-                self.table.setItem(row, 2, usage_item)
-
-                total_usage += usage
-                usages.append(usage)
+        data = get_data(cursor, date, time)
+        total_usage = data[1]
+        self.table.setRowCount(len(data[0]) + 1)
         
-        for row, usage in enumerate(usages):
+        for row, (app_name, usage) in enumerate(data[0]):
+            app_item = QTableWidgetItem(app_name)
+            usage_item = UsageItem(usage, SECONDS_TYPE)
+
+            usage_item.setData(USAGE_ROLE, usage)
+
+            self.table.setItem(row, 0, app_item)
+            self.table.setItem(row, 2, usage_item)
+
             item = QTableWidgetItem(PERCENT_TYPE)
             item.setData(PERCENT_ROLE, usage/total_usage)
             self.table.setItem(row, 1, item)
+        
 
         self.table.setSortingEnabled(True)

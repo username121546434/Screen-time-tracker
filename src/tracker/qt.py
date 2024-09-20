@@ -3,6 +3,8 @@ from PySide6.QtWidgets import *
 from PySide6.QtCore import *
 import time
 from .tracker import track
+import sqlite3
+from constants import FILE
 
 
 class TrackerSignals(QObject):
@@ -18,11 +20,13 @@ class TrackerWorker(QRunnable):
     
     @Slot()
     def run(self) -> None:
+        database = sqlite3.connect(FILE)
+        cursor = database.cursor()
         while True:
             time.sleep(1)
             if getattr(self, 'quit', False):
                 return
-            name = track()
+            name = track(cursor)
             print(name)
             self.signals.finished.emit(name)
 

@@ -1,63 +1,60 @@
-import csv
-from constants import TimePeriod, DATE_FMT, APP_EXE_IDX, APP_NAME_IDX
+import sqlite3
+from constants import TimePeriod, TABLE_NAME, DATE_FMT_SQL, APP_NAME_IDX
 from datetime import datetime
 from PySide6.QtCore import QDate
 
 
-def get_data(csv_file: str, date: QDate, time_period: TimePeriod, include_other: bool = False):
+def get_data(cursor: sqlite3.Cursor, date: QDate, time_period: TimePeriod, include_other: bool = False):
     lst: list[tuple[str, int]] = []
     total = 0
-    with open(csv_file) as f:
-        reader = csv.reader(f)
-        first_line = {}
-        for idx, i in enumerate(next(reader)):
-            try:
-                first_line[datetime.strptime(i, DATE_FMT)] = idx
-            except ValueError:
-                pass
+    cursor.execute(f"select * from {TABLE_NAME}")
 
-        for row, line in enumerate(reader):
-            app_name = line[APP_NAME_IDX]
-            if app_name == 'None':
-                app_name = line[APP_EXE_IDX]
-            
-            if time_period == 'All Time':
-                usage = sum(map(int, line[APP_EXE_IDX + 1:]))
-            elif time_period == 'Day':
-                day = date.toPython() # this returns a datetime.date object
-                day = datetime(day.year, day.month, day.day)
-                idx = first_line[day]
-                usage = int(line[idx])
-            elif time_period == 'Month':
-                month = date.month()
-                year = date.year()
-                usage = 0
+    data = cursor.fetchall()
+    columns = {datetime.strptime(i[0], DATE_FMT_SQL): APP_NAME_IDX + idx + 1
+               for idx, i in enumerate(cursor.description[APP_NAME_IDX + 1:])}
+    print(data)
+    print(columns)
+
+    for row, row_data in enumerate(data):
+        app_name: str = row_data[APP_NAME_IDX]
+
+        if time_period == 'All Time':
+            usage = sum(map(int, row_data[APP_NAME_IDX + 1:]))
+        elif time_period == 'Day':
+            day = date.toPython() # this returns a datetime.date object
+            day = datetime(day.year, day.month, day.day)
+            idx = columns[day]
+            usage = int(row_data[idx])
+        elif time_period == 'Month':
+            month = date.month()
+            year = date.year()
+            usage = 0
+            for day in range(1, 32):
+                try:
+                    day = datetime(year, month, day)
+                    idx = columns[day]
+                except KeyError:
+                    pass
+                except ValueError:
+                    break
+                else:
+                    usage += int(row_data[idx])
+        elif time_period == 'Year':
+            year = date.year()
+            usage = 0
+            for month in range(1, 13):
                 for day in range(1, 32):
                     try:
                         day = datetime(year, month, day)
-                        idx = first_line[day]
-                    except KeyError:
+                        idx = columns[day]
+                    except (KeyError, ValueError):
                         pass
-                    except ValueError:
-                        break
                     else:
-                        usage += int(line[idx])
-            elif time_period == 'Year':
-                year = date.year()
-                usage = 0
-                for month in range(1, 13):
-                    for day in range(1, 32):
-                        try:
-                            day = datetime(year, month, day)
-                            idx = first_line[day]
-                        except (KeyError, ValueError):
-                            pass
-                        else:
-                            usage += int(line[idx])
+                        usage += int(row_data[idx])
 
-            total += usage
+        total += usage
 
-            lst.append((app_name, usage))
+        lst.append((app_name, usage))
 
     lst.sort(key=lambda a: a[1], reverse=True)
 
