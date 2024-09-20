@@ -90,9 +90,17 @@ class MainWindow(QMainWindow):
 
 
 def main():
-    if not os.path.exists(FILE):
-        with open(FILE, 'w') as f:
-            f.write(f'AppName,ExeName,{datetime.now():{DATE_FMT}}')
+    database = sqlite3.connect(FILE)
+    cursor = database.cursor()
+    cursor.execute(f"""
+    CREATE TABLE IF NOT EXISTS {TABLE_NAME} (
+        {APP_EXE_COL} text,
+        {APP_NAME_COL} text,
+        {datetime.now().strftime(DATE_FMT_SQL)} INT default 0,
+        PRIMARY KEY ({APP_EXE_COL}, {APP_NAME_COL})
+    );
+    """)
+    database.commit()
 
     app = QApplication([])
     app.setQuitOnLastWindowClosed(False)
