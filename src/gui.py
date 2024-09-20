@@ -1,12 +1,12 @@
 from datetime import datetime
-import os
+import sqlite3
 from pathlib import Path
 import sys
 from typing import Literal
 from PySide6.QtCore import QThreadPool
 from PySide6.QtGui import QIcon, QCloseEvent, QAction
 from PySide6.QtWidgets import QMainWindow, QWidget, QApplication, QLabel, QVBoxLayout, QSystemTrayIcon, QMenu, QPushButton
-from constants import DATE_FMT, FILE
+from constants import DATE_FMT_SQL, FILE, TABLE_NAME, APP_EXE_COL, APP_NAME_COL
 from ui.apps_display import AppsDisplay
 from ui.pie_chart import ScreenTimeChart
 from ui.date_input import DateInput
@@ -15,10 +15,12 @@ from tracker.qt import TrackerWorker
 
 
 class MainWindow(QMainWindow):
-    def __init__(self) -> None:
+    def __init__(self, cursor: sqlite3.Cursor) -> None:
         super(MainWindow, self).__init__()
         self.setWindowTitle('Screen Time Tracker')
         self.setMinimumSize(300, 450)
+
+        self.database_cursor = cursor
 
         layout = QVBoxLayout()
 
@@ -32,10 +34,10 @@ class MainWindow(QMainWindow):
         self.date.date.dateChanged.connect(self.update)
         self.date.time_period.currentTextChanged.connect(self.update)
 
-        self.chart = ScreenTimeChart(self)
+        self.chart = ScreenTimeChart(self, self.database_cursor)
         layout.addWidget(self.chart.chart_view)
 
-        self.bar_graph = ScreenTimeBarGraph(self)
+        self.bar_graph = ScreenTimeBarGraph(self, self.database_cursor)
         layout.addWidget(self.bar_graph.chart_view)
         self.bar_graph.chart_view.hide()
 
@@ -52,7 +54,7 @@ class MainWindow(QMainWindow):
         layout.addWidget(self.refresh)
         self.refresh.clicked.connect(self.update)
 
-        self.apps = AppsDisplay(FILE, self)
+        self.apps = AppsDisplay(cursor, self)
         layout.addWidget(self.apps)
 
         self.threadpool = QThreadPool()
@@ -78,9 +80,9 @@ class MainWindow(QMainWindow):
 
     def update(self):
         try:
-            self.apps.update_display(self.date.date.date(), self.date.time_period.currentText())
-            self.chart.update(self.date.date.date(), self.date.time_period.currentText())
-            self.bar_graph.update(self.date.date.date(), self.date.time_period.currentText())
+            self.apps.update_display(self.date.date.date(), self.date.time_period.currentText(), self.database_cursor)
+            self.chart.update(self.date.date.date(), self.date.time_period.currentText(), self.database_cursor)
+            self.bar_graph.update(self.date.date.date(), self.date.time_period.currentText(), self.database_cursor)
         except KeyError:
             self.statusBar().showMessage(f'No data for {self.date.date.date().toPython()}', 2000)
             raise
@@ -105,7 +107,7 @@ def main():
     app = QApplication([])
     app.setQuitOnLastWindowClosed(False)
 
-    window = MainWindow()
+    window = MainWindow(cursor)
 
     icon = QIcon(str(Path("clock.png").resolve()))
 
