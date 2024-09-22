@@ -1,5 +1,5 @@
 import sqlite3
-from constants import TimePeriod, TABLE_NAME, DATE_FMT_SQL, APP_NAME_IDX
+from constants import TimePeriod, TABLE_NAME, DATE_FMT_SQL, APP_NAME_IDX, APP_EXE_IDX
 from datetime import datetime
 from PySide6.QtCore import QDate
 
@@ -17,6 +17,8 @@ def get_data(cursor: sqlite3.Cursor, date: QDate, time_period: TimePeriod, inclu
 
     for row, row_data in enumerate(data):
         app_name: str = row_data[APP_NAME_IDX]
+        if app_name == "None":
+            app_name = row_data[APP_EXE_IDX]
 
         if time_period == 'All Time':
             usage = sum(map(int, row_data[APP_NAME_IDX + 1:]))

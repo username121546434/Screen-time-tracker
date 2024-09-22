@@ -37,6 +37,8 @@ WHERE ({APP_NAME_COL} = ?) AND ({APP_EXE_COL} = ?)
 def write_data(cursor: sqlite3.Cursor, proc_name: str | None, app_name: str | None):
     if proc_name is None or app_name == '':
         return
+    if app_name is None:
+        app_name = str(app_name)
     try:
         cursor.execute("ALTER TABLE " + TABLE_NAME + " ADD COLUMN " + \
                     datetime.now().strftime(DATE_FMT_SQL) + \
