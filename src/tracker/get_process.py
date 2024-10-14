@@ -85,3 +85,9 @@ def get_app_name_from_exe(windows_exe: str) -> str | None:
 
 
 get_active_window_process_name = get_active_window_app_path
+
+
+# renamed and slightly edited function from https://stackoverflow.com/a/33765403/19581763
+def get_idle_time() -> float:
+    """Get the amount of time user has been idle for in seconds"""
+    return (win32api.GetTickCount() - win32api.GetLastInputInfo()) / 1000.0

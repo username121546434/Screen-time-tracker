@@ -11,5 +11,6 @@ APP_EXE_COL = 'AppExe'
 
 APP_NAME_IDX = 1
 APP_EXE_IDX = 0
+MAX_IDLE_TIME = 30
 
 TimePeriod = Literal['Day', 'Month', 'Year', 'All Time']

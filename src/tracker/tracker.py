@@ -1,7 +1,7 @@
-from .get_process import get_active_window_app_name, get_active_window_app_path, get_app_name_from_exe
+from .get_process import get_active_window_app_name, get_active_window_app_path, get_app_name_from_exe, get_idle_time
 import time
 from datetime import datetime
-from constants import FILE, DATE_FMT_SQL, TABLE_NAME, APP_EXE_COL, APP_NAME_COL
+from constants import DATE_FMT_SQL, TABLE_NAME, APP_EXE_COL, APP_NAME_COL, MAX_IDLE_TIME
 import sqlite3
 
 
@@ -57,8 +57,10 @@ def write_data(cursor: sqlite3.Cursor, proc_name: str | None, app_name: str | No
 def track(cursor: sqlite3.Cursor):
     filename, fullpath = get_active_window_app_name(), get_active_window_app_path()
     name = get_app_name_from_exe(fullpath)
-    write_data(cursor, filename, name)
-    return name, filename
+    idle_time = get_idle_time()
+    if idle_time <= MAX_IDLE_TIME:
+        write_data(cursor, filename, name)
+    return name, filename, idle_time
 
 
 def main():

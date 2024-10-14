@@ -6,7 +6,7 @@ from typing import Literal
 from PySide6.QtCore import QThreadPool
 from PySide6.QtGui import QIcon, QCloseEvent, QAction
 from PySide6.QtWidgets import QMainWindow, QWidget, QApplication, QLabel, QVBoxLayout, QSystemTrayIcon, QMenu, QPushButton
-from constants import DATE_FMT_SQL, FILE, TABLE_NAME, APP_EXE_COL, APP_NAME_COL
+from constants import DATE_FMT_SQL, FILE, TABLE_NAME, APP_EXE_COL, APP_NAME_COL, MAX_IDLE_TIME
 from ui.apps_display import AppsDisplay
 from ui.pie_chart import ScreenTimeChart
 from ui.date_input import DateInput
@@ -73,10 +73,10 @@ class MainWindow(QMainWindow):
             self.chart.chart_view.show()
             self.current_graph_displayed = 'Pie'
 
-    def on_update(self, name: tuple[str, str]):
+    def on_update(self, name: tuple[str, str, float]):
         if self.isHidden():
             return
-        self.label.setText(f'Current App: {name}')
+        self.label.setText(f'Current App: {name} {"(Detected idle)" if name[-1] >= MAX_IDLE_TIME else ""}')
 
     def update(self):
         try:
